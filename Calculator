@@ -1,0 +1,327 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <stdio.h>
+#include <stdlib.h>
+
+using namespace std;
+
+// 学生信息结构体
+struct StudentInfo {
+    string id; // 学号
+    string name; // 姓名
+    int score; // 分数
+};
+
+// 随机生成100以内的整数
+int generateRandomNumber() {
+    return rand() % 100 + 1;
+}
+
+// 生成随机运算符
+char generateRandomOperator() {
+    char operators[] = { '+', '-', '*', '/' };
+    return operators[rand() % 4];
+}
+
+// 判断除法是否能整除
+bool isDivisible(int a, int b, char op) {
+    if (op == '/') {
+        return b != 0 && a % b == 0;
+    }
+    return true;
+}
+
+// 计算表达式的值
+int calculate(int a, int b, char op) {
+    int result;
+    switch (op) {
+    case '+':
+        result = a + b;
+        break;
+    case '-':
+        result = a - b;
+        break;
+    case '*':
+        result = a * b;
+        break;
+    case '/':
+        result = a / b;
+        break;
+    default:
+        result = 0;
+        break;
+    }
+
+    return result;
+}
+
+
+
+
+// 计算练习
+void practice() {
+    int totalQuestions = 0;
+    int correctAnswers = 0;
+    while (true) {
+        int a = generateRandomNumber();
+        int b = generateRandomNumber();
+        char op = generateRandomOperator();
+        if (isDivisible(a, b, op)) {
+            totalQuestions++;
+            cout << "题目 " << totalQuestions << ": " << a << " " << op << " " << b << " = ? ";
+            int answer;
+            cin >> answer;
+            if (answer == calculate(a, b, op)) {
+                cout << "回答正确！" << endl;
+                correctAnswers++;
+            }
+            else {
+                cout << "回答错误！请重新作答（还有两次机会）：" << endl;
+                cin >> answer;
+                if (answer == calculate(a, b, op)) {
+                    cout << "回答正确！" << endl;
+                    correctAnswers++;
+                }
+                else {
+                    cout << "回答错误！请重新作答（还有一次机会）：" << endl;
+                    cin >> answer;
+                    if (answer == calculate(a, b, op)) {
+                        cout << "回答正确！" << endl;
+                        correctAnswers++;
+                    }
+                    else {
+                        cout << "回答错误！正确答案是: " << calculate(a, b, op) << endl;
+                    }
+                }
+            }
+            char continuePractice;
+            cout << "继续练习吗？(Y/N) ";
+            cin >> continuePractice;
+            if (continuePractice == 'N' || continuePractice == 'n') {
+                cout << "总题数：" << totalQuestions << "，回答正确数：" << correctAnswers
+                    << "，正确率：" << (double)correctAnswers / totalQuestions * 100 << "%" << endl;
+
+                char returnToMain;
+                cout << "是否返回主界面？(Y/N) ";
+                cin >> returnToMain;
+                if (returnToMain == 'Y' || returnToMain == 'y') {
+                    return;
+                }
+                else {
+                    cout << "感谢您的使用，再见！" << endl;
+                    exit(0);
+                }
+
+                break;
+            }
+        }
+    }
+}
+
+// 计算考试
+void exam() {
+    string id, name;
+    int totalScore = 0;
+    vector<string> questions;
+    vector<bool> answers;
+    cout << "请输入学号：";
+    cin >> id;
+    cout << "请输入姓名：";
+    cin >> name;
+    int questionCount;
+    cout << "请输入题目数量：";
+    cin >> questionCount;
+    for (int i = 0; i < questionCount; i++) {
+        int a = generateRandomNumber();
+        int b = generateRandomNumber();
+        char op = generateRandomOperator();
+        if (isDivisible(a, b, op)) {
+            questions.push_back(to_string(a) + " " + string(1, op) + " " + to_string(b) + " = ?");
+            int answer;
+            cout << "题目 " << (i + 1) << ": " << questions[i] << " ";
+            cin >> answer;
+            if (answer == calculate(a, b, op)) {
+                cout << "回答正确！" << endl;
+                answers.push_back(true);
+                totalScore += 100 / questionCount;
+            }
+            else {
+                cout << "回答错误！正确答案是: " << calculate(a, b, op) << endl;
+                int correctanswer = calculate(a, b, op);
+                answers.push_back(false);
+            }
+        }
+    }
+    cout << "总分：" << totalScore << endl;
+    cout << "题目情况：" << endl;
+    for (int i = 0; i < questions.size(); i++) {
+        cout << questions[i] << " " << (answers[i] ? "√" : "×") << endl;
+    }
+    // 将成绩保存到文件
+    FILE* file = fopen("scores.txt", "a");
+    fprintf(file, "%s %s %d\n", id.c_str(), name.c_str(), totalScore);
+    fclose(file);
+    char returnToMain;
+    cout << "是否返回主界面？(Y/N) ";
+    cin >> returnToMain;
+    if (returnToMain == 'Y' || returnToMain == 'y') {
+        return;
+    }
+    else {
+        cout << "感谢您的使用，再见！" << endl;
+        exit(0);
+    }
+}
+
+// 查询成绩
+void queryScore() {
+    string id, name;
+    cout << "请输入学号：";
+    cin >> id;
+    cout << "请输入姓名：";
+    cin >> name;
+    FILE* file = fopen("scores.txt", "r");
+    char studentId[10];
+    char studentName[20];
+    int score;
+    bool found = false;
+    if (file != NULL) {
+        while (fscanf(file, "%s %s %d", studentId, studentName, &score) != EOF) {
+            if (id == studentId && name == studentName) {
+                found = true;
+                cout << "学号：" << studentId << "，姓名：" << studentName << "，成绩：" << score << endl;
+                break;
+            }
+        }
+        fclose(file);
+    }
+    if (!found) {
+        cout << "未找到该学生的成绩！" << endl;
+    }
+    char returnToMain;
+    cout << "是否返回主界面？(Y/N) ";
+    cin >> returnToMain;
+    if (returnToMain == 'Y' || returnToMain == 'y') {
+        return;
+    }
+    else {
+        cout << "感谢您的使用，再见！" << endl;
+        exit(0);
+    }
+}
+
+// 成绩排序
+void sortScore() {
+    vector<StudentInfo> students;
+    FILE* file = fopen("scores.txt", "r");
+    char id[10], name[20];
+    int score;
+    if (file != NULL) {
+        while (fscanf(file, "%s %s %d", id, name, &score) != EOF) {
+            StudentInfo student = { string(id), string(name), score };
+            students.push_back(student);
+        }
+        fclose(file);
+    }
+    sort(students.begin(), students.end(), [](const StudentInfo& a, const StudentInfo& b) {
+        return a.score > b.score;
+        });
+    cout << "排序前的成绩：" << endl;
+    for (const auto& student : students) {
+        cout << "学号：" << student.id << "，姓名：" << student.name << "，成绩：" << student.score << endl;
+    }
+    cout << "排序后的成绩：" << endl;
+    for (const auto& student : students) {
+        cout << "学号：" << student.id << "，姓名：" << student.name << "，成绩：" << student.score << endl;
+    }
+    char returnToMain;
+    cout << "是否返回主界面？(Y/N) ";
+    cin >> returnToMain;
+    if (returnToMain == 'Y' || returnToMain == 'y') {
+        return;
+    }
+    else {
+        cout << "感谢您的使用，再见！" << endl;
+        exit(0);
+    }
+}
+
+// 学生信息删除
+void deleteStudentInfo() {
+    string id, name;
+    cout << "请输入学号：";
+    cin >> id;
+    cout << "请输入姓名：";
+    cin >> name;
+    FILE* oldFile = fopen("scores.txt", "r");
+    FILE* newFile = fopen("temp.txt", "w");
+    char studentId[10], studentName[20];
+    int score;
+    if (oldFile != NULL && newFile != NULL) {
+        while (fscanf(oldFile, "%s %s %d", studentId, studentName, &score) != EOF) {
+            if (strcmp(studentId, id.c_str()) != 0 || strcmp(studentName, name.c_str()) != 0) {
+                fprintf(newFile, "%s %s %d\n", studentId, studentName, score);
+            }
+        }
+        fclose(oldFile);
+        fclose(newFile);
+        remove("scores.txt");
+        rename("temp.txt", "scores.txt");
+        cout << "删除完成！" << endl;
+    }
+    char returnToMain;
+    cout << "是否返回主界面？(Y/N) ";
+    cin >> returnToMain;
+    if (returnToMain == 'Y' || returnToMain == 'y') {
+        return;
+    }
+    else {
+        cout << "感谢您的使用，再见！" << endl;
+        exit(0);
+    }
+}
+
+
+int main() {
+    srand(time(0));
+    char choice;
+    do {
+        cout << "--------------主界面--------------\n";
+        cout << "欢迎使用小学生四则运算考试系统" << endl;
+        cout << "1. 计算练习" << endl;
+        cout << "2. 计算考试" << endl;
+        cout << "3. 查询成绩" << endl;
+        cout << "4. 成绩排序" << endl;
+        cout << "5. 学生信息删除" << endl;
+        cout << "6. 退出系统" << endl;
+        cout << "请选择功能：";
+        cin >> choice;
+        switch (choice) {
+        case '1':
+            practice();
+            break;
+        case '2':
+            exam();
+            break;
+        case '3':
+            queryScore();
+            break;
+        case '4':
+            sortScore();
+            break;
+        case '5':
+            deleteStudentInfo();
+            break;
+        case '6':
+            cout << "感谢使用，再见！" << endl;
+            break;
+        default:
+            cout << "输入无效，请重新输入！" << endl;
+        }
+    } while (choice != '6');
+
+    return 0;
+}
+
